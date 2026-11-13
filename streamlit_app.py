@@ -4,147 +4,391 @@ import requests
 import random
 import ast
 import operator
-import string
+import re
 from datetime import datetime
-from zoneinfo import ZoneInfo
 from urllib.parse import quote
 
 # ==========================================
-# SHERZOD AI ASSISTANT
+# SHERZOD AI ASSISTANT 1.0
 # Creator: Fayzullayev Sherzodbek
 # ==========================================
 
 st.set_page_config(
-    page_title="Sherzod AI Assistant",
-    page_icon="🤖",
+    page_title="SHERZOD AI ASSISTANT",
+    page_icon="👑",
     layout="wide"
 )
 
-# ---------- DIZAYN ----------
+# ==========================================
+# DESIGN
+# ==========================================
 
 st.markdown("""
 <style>
 .stApp {
-    background: linear-gradient(135deg,#07111f,#101e38);
-    color: white;
+    background: linear-gradient(135deg,#050505,#171717,#080808);
+    color: #eeeeee;
 }
-h1,h2,h3,p,label {
-    color: white !important;
+section[data-testid="stSidebar"] {
+    background: #101010;
+    border-right: 1px solid #555;
 }
-.stChatMessage {
-    background: #172943;
-    border-radius: 15px;
+h1, h2, h3 {
+    color: #dedede !important;
+}
+p, label, span {
+    color: #eeeeee;
 }
 .stButton button {
-    background: #183b66;
+    background: linear-gradient(135deg,#333,#999,#333);
     color: white;
+    border: 1px solid #aaa;
     border-radius: 12px;
-    border: 1px solid #3974ad;
+    font-weight: bold;
 }
 .stButton button:hover {
-    background: #28609a;
+    background: #777;
     color: white;
+}
+[data-testid="stChatMessage"] {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid #444;
+    border-radius: 14px;
+}
+input, textarea {
+    background: #151515 !important;
+    color: white !important;
+}
+hr {
+    border-color: #555;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# ---------- SOZLAMALAR ----------
+# ==========================================
+# SESSION
+# ==========================================
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+if "username" not in st.session_state:
+    st.session_state.username = "Foydalanuvchi"
+
+# ==========================================
+# CONSTANTS
+# ==========================================
+
+HEADERS = {
+    "User-Agent": "SherzodAI/1.0"
+}
 
 FACTS = [
+    "Asalarilar bir-biri bilan raqs orqali aloqa qiladi.",
+    "Yorug‘lik Quyoshdan Yerga taxminan 8 daqiqada yetib keladi.",
     "Ahtapotning uchta yuragi bor.",
-    "Yorug'lik Quyoshdan Yerga taxminan 8 daqiqada yetadi.",
-    "Venerada bir kun uning yilidan uzunroq.",
-    "Asalarilar raqs orqali ma'lumot uzatadi.",
-    "Kitlar tovushlar yordamida aloqa qiladi.",
-    "Inson tanasidagi eng katta organ teridir.",
-    "Pingvinlar ucha olmaydigan qushlardir.",
-    "Saturnning zichligi suvnikidan kichik.",
-    "Oy Yerning tabiiy yo'ldoshidir.",
-    "Suvning kimyoviy formulasi H2O."
+    "Yupiter Quyosh tizimidagi eng katta sayyora.",
+    "Inson miyasi juda ko‘p ma'lumotni qayta ishlay oladi.",
+    "Dunyodagi eng katta okean Tinch okeanidir.",
+    "Pingvinlar ucha olmaydi, lekin juda yaxshi suzadi.",
+    "Saturnning halqalari asosan muz va changdan iborat.",
+    "O‘simliklar fotosintez orqali oziqa hosil qiladi.",
+    "Yer Quyosh atrofida aylanadi."
 ]
 
 JOKES = [
-    "Kompyuter nega sovqotmaydi? Chunki Windows oynalari bor! 😄",
-    "Dasturchi choy ichsa nima deydi? Java kerak!",
-    "Telefon nega uxlamaydi? Chunki doim zaryad kutadi!",
-    "Kitob nega xafa? Chunki uni hech kim varaqlamayapti."
+    "Kompyuter nega sovuq qotmaydi? Chunki uning Windows'i bor! 😄",
+    "Dasturchi choy ichsa ham bug qidiradi. 😂",
+    "Matematika kitobi nega xafa? Chunki unda muammolar juda ko‘p!",
+    "Kompyuter uxlayaptimi? Balki Sleep rejimidadir!"
 ]
 
 MOTIVATION = [
-    "Har bir katta natija kichik qadamdan boshlanadi!",
-    "Xatolar o'rganishning bir qismidir.",
-    "Bugungi harakating ertangi natijangni yaratadi.",
-    "Bilim olishdan hech qachon to'xtama!",
-    "Maqsading sari sabr bilan harakat qil."
+    "Har bir katta natija kichik qadamdan boshlanadi.",
+    "Bugungi mehnating ertangi muvaffaqiyatingdir.",
+    "Xatolar — o‘rganishning bir qismi.",
+    "Maqsading sari sabr bilan harakat qil!",
+    "O‘zingga ishon va bilim olishdan to‘xtama."
+]
+
+RIDDLES = [
+    ("Qanoti yo‘q, uchadi. Og‘zi yo‘q, gapiradi. Bu nima?", "Shamol"),
+    ("Qancha ko‘p olsang, shuncha kattalashadi. Bu nima?", "Chuqur"),
+    ("Kechasi ko‘rinadi, kunduzi yo‘qoladi. Bu nima?", "Yulduz")
 ]
 
 WORDS = {
     "hello": "Salom",
-    "hi": "Salom",
     "good morning": "Xayrli tong",
     "good night": "Xayrli tun",
     "thank you": "Rahmat",
     "please": "Iltimos",
-    "friend": "Do'st",
-    "beautiful": "Chiroyli",
+    "friend": "Do‘st",
     "school": "Maktab",
     "book": "Kitob",
     "water": "Suv",
-    "apple": "Olma",
+    "computer": "Kompyuter",
+    "beautiful": "Chiroyli",
+    "knowledge": "Bilim",
+    "love": "Sevgi",
+    "family": "Oila",
+    "work": "Ish",
+    "time": "Vaqt",
+    "дом": "Uy",
     "привет": "Salom",
-    "здравствуйте": "Assalomu alaykum",
     "спасибо": "Rahmat",
     "пожалуйста": "Iltimos",
-    "друг": "Do'st",
-    "красивый": "Chiroyli",
+    "друг": "Do‘st",
     "школа": "Maktab",
     "книга": "Kitob",
     "вода": "Suv",
-    "пока": "Xayr",
-    "ладно": "Mayli",
-    "хватит": "Yetar",
-    "добрый": "Mehribon",
-    "злой": "Jahldor"
+    "красивый": "Chiroyli",
+    "любовь": "Sevgi",
+    "семья": "Oila",
+    "время": "Vaqt",
+    "добрый вечер": "Xayrli kech"
 }
 
-# ---------- KALKULYATOR ----------
+# ==========================================
+# TIME
+# ==========================================
 
-OPERATIONS = {
+def get_time():
+    try:
+        from zoneinfo import ZoneInfo
+        now = datetime.now(ZoneInfo("Asia/Tashkent"))
+    except Exception:
+        now = datetime.utcnow()
+
+    return now.strftime("%H:%M:%S"), now.strftime("%d.%m.%Y")
+
+
+# ==========================================
+# WIKIPEDIA SEARCH
+# ==========================================
+
+def wikipedia_search(query, language="uz"):
+    languages = [language]
+
+    if language == "uz":
+        languages += ["ru", "en"]
+    elif language == "ru":
+        languages += ["uz", "en"]
+    else:
+        languages += ["uz", "ru"]
+
+    for lang in languages:
+        try:
+            url = f"https://{lang}.wikipedia.org/w/api.php"
+
+            params = {
+                "action": "query",
+                "list": "search",
+                "srsearch": query,
+                "format": "json",
+                "srlimit": 3
+            }
+
+            response = requests.get(
+                url,
+                params=params,
+                headers=HEADERS,
+                timeout=12
+            )
+            response.raise_for_status()
+
+            results = response.json()["query"]["search"]
+
+            if not results:
+                continue
+
+            page_title = results[0]["title"]
+
+            summary_url = (
+                f"https://{lang}.wikipedia.org/api/rest_v1/"
+                f"page/summary/{quote(page_title.replace(' ', '_'))}"
+            )
+
+            summary = requests.get(
+                summary_url,
+                headers=HEADERS,
+                timeout=12
+            )
+
+            if summary.status_code == 200:
+                data = summary.json()
+                extract = data.get("extract", "")
+
+                if extract:
+                    return (
+                        f"📚 **{page_title}**\n\n"
+                        f"{extract}\n\n"
+                        f"Manba: {lang}.wikipedia.org"
+                    )
+
+        except Exception:
+            continue
+
+    return None
+
+
+# ==========================================
+# TRANSLATOR
+# ==========================================
+
+def translate_text(text, source, target):
+    try:
+        url = "https://api.mymemory.translated.net/get"
+
+        params = {
+            "q": text,
+            "langpair": f"{source}|{target}"
+        }
+
+        response = requests.get(
+            url,
+            params=params,
+            timeout=15
+        )
+        response.raise_for_status()
+
+        result = response.json()
+        translated = result["responseData"]["translatedText"]
+
+        if result["responseStatus"] == 200:
+            return translated
+
+    except Exception:
+        pass
+
+    return "Tarjima amalga oshmadi. Internetni tekshiring."
+
+
+# ==========================================
+# WEATHER
+# ==========================================
+
+def weather(city):
+    try:
+        geo_url = "https://geocoding-api.open-meteo.com/v1/search"
+
+        geo = requests.get(
+            geo_url,
+            params={
+                "name": city,
+                "count": 1,
+                "language": "uz",
+                "format": "json"
+            },
+            timeout=12
+        ).json()
+
+        if not geo.get("results"):
+            return "Shahar topilmadi. Nomini tekshiring."
+
+        place = geo["results"][0]
+        lat = place["latitude"]
+        lon = place["longitude"]
+
+        weather_url = "https://api.open-meteo.com/v1/forecast"
+
+        data = requests.get(
+            weather_url,
+            params={
+                "latitude": lat,
+                "longitude": lon,
+                "current": "temperature_2m,relative_humidity_2m,wind_speed_10m",
+                "timezone": "Asia/Tashkent"
+            },
+            timeout=12
+        ).json()
+
+        current = data["current"]
+
+        return (
+            f"🌤 **{place['name']} ob-havosi**\n\n"
+            f"🌡 Harorat: {current['temperature_2m']} °C\n\n"
+            f"💧 Namlik: {current['relative_humidity_2m']}%\n\n"
+            f"💨 Shamol: {current['wind_speed_10m']} km/soat"
+        )
+
+    except Exception:
+        return "Ob-havo ma'lumotini olishda xatolik. Internetni tekshiring."
+
+
+# ==========================================
+# CURRENCY
+# ==========================================
+
+def currency():
+    try:
+        url = "https://open.er-api.com/v6/latest/USD"
+        data = requests.get(url, timeout=12).json()
+
+        if data.get("result") != "success":
+            return "Valyuta ma'lumoti hozircha olinmadi."
+
+        rates = data["rates"]
+
+        usd = rates.get("UZS")
+        eur = rates.get("EUR")
+        rub = rates.get("RUB")
+
+        return (
+            "💰 **Valyuta kurslari**\n\n"
+            f"1 USD ≈ {usd} UZS\n\n"
+            f"1 USD ≈ {eur} EUR\n\n"
+            f"1 USD ≈ {rub} RUB\n\n"
+            "Kurslar o‘zgarib turadi."
+        )
+
+    except Exception:
+        return "Valyuta ma'lumoti olinmadi."
+
+
+# ==========================================
+# SAFE CALCULATOR
+# ==========================================
+
+OPERATORS = {
     ast.Add: operator.add,
     ast.Sub: operator.sub,
     ast.Mult: operator.mul,
     ast.Div: operator.truediv,
-    ast.Pow: operator.pow,
+    ast.FloorDiv: operator.floordiv,
     ast.Mod: operator.mod,
-    ast.USub: operator.neg,
-    ast.UAdd: operator.pos
+    ast.Pow: operator.pow,
+    ast.UAdd: operator.pos,
+    ast.USub: operator.neg
 }
 
-def calculate(expression):
+
+def safe_calculate(expression):
     try:
         tree = ast.parse(expression, mode="eval")
 
-        def solve(node):
+        def calculate(node):
             if isinstance(node, ast.Expression):
-                return solve(node.body)
+                return calculate(node.body)
 
             if isinstance(node, ast.Constant):
-                if type(node.value) in (int, float):
+                if isinstance(node.value, (int, float)):
                     return node.value
                 raise ValueError()
 
             if isinstance(node, ast.BinOp):
-                operation = OPERATIONS.get(type(node.op))
-                if operation is None:
+                op = type(node.op)
+
+                if op not in OPERATORS:
                     raise ValueError()
 
-                left = solve(node.left)
-                right = solve(node.right)
+                left = calculate(node.left)
+                right = calculate(node.right)
 
-                if isinstance(node.op, ast.Pow) and abs(right) > 100:
+                if isinstance(node.op, ast.Pow) and abs(right) > 10:
                     raise ValueError()
 
-                result = operation(left, right)
+                result = OPERATORS[op](left, right)
 
                 if abs(result) > 10**100:
                     raise ValueError()
@@ -152,540 +396,520 @@ def calculate(expression):
                 return result
 
             if isinstance(node, ast.UnaryOp):
-                operation = OPERATIONS.get(type(node.op))
-                if operation is None:
+                op = type(node.op)
+
+                if op not in OPERATORS:
                     raise ValueError()
-                return operation(solve(node.operand))
+
+                return OPERATORS[op](calculate(node.operand))
 
             raise ValueError()
 
-        return solve(tree)
+        return calculate(tree)
 
     except ZeroDivisionError:
-        return "Nolga bo'lish mumkin emas."
+        return "Nolga bo‘lish mumkin emas."
     except Exception:
-        return "Misol xato. Masalan: 25+15*2"
+        return "Hisoblash xatosi. Masalan: hisobla: 25*4"
 
-# ---------- VAQT VA SANA ----------
 
-def get_time():
-    return datetime.now(
-        ZoneInfo("Asia/Tashkent")
-    ).strftime("%H:%M:%S")
+# ==========================================
+# KNOWLEDGE
+# ==========================================
 
-def get_date():
-    return datetime.now(
-        ZoneInfo("Asia/Tashkent")
-    ).strftime("%d.%m.%Y")
+KNOWLEDGE = {
+    "amir temur": (
+        "Amir Temur 1336-yilda Kesh yaqinida tug‘ilgan. "
+        "U buyuk davlat arbobi va sarkarda bo‘lgan. "
+        "1370-yilda Movarounnahrda hokimiyatni qo‘lga kiritgan. "
+        "Samarqandni davlatining poytaxtiga aylantirgan."
+    ),
 
-# ---------- OB-HAVO ----------
+    "shayboniyxon": (
+        "Muhammad Shayboniyxon 1451-yilda tug‘ilgan. "
+        "U Shayboniylar davlatiga asos solgan. "
+        "1500-yilda Movarounnahrda hokimiyatni egallashni boshlagan. "
+        "Uning faoliyati O‘zbekiston tarixida muhim o‘rin tutadi."
+    ),
 
-def weather(city):
-    try:
-        url = (
-            "https://geocoding-api.open-meteo.com/v1/search"
-            f"?name={quote(city)}&count=1&language=uz"
-        )
-        response = requests.get(url, timeout=12)
-        response.raise_for_status()
+    "ikkinchi jahon urushi": (
+        "Ikkinchi jahon urushi 1939-yil 1-sentabrda boshlangan "
+        "va 1945-yilda tugagan. Urush ko‘plab davlatlarni qamrab olgan. "
+        "1945-yil sentabrda Yaponiya taslim bo‘lishi bilan yakunlangan."
+    ),
 
-        places = response.json().get("results", [])
+    "birinchi jahon urushi": (
+        "Birinchi jahon urushi 1914–1918-yillarda bo‘lib o‘tgan. "
+        "U Yevropa va boshqa hududlardagi ko‘plab davlatlarni qamrab olgan."
+    ),
 
-        if not places:
-            return "Shahar topilmadi."
+    "misr": (
+        "Qadimgi Misr Nil daryosi bo‘yida rivojlangan. "
+        "U piramidalari, fir'avnlari va yozuv tizimi bilan mashhur."
+    ),
 
-        place = places[0]
+    "rim imperiyasi": (
+        "Rim imperiyasi qadimgi dunyoning eng yirik davlatlaridan biri "
+        "bo‘lgan. Uning huquq, me'morchilik va madaniyatga ta'siri katta."
+    ),
 
-        url = (
-            "https://api.open-meteo.com/v1/forecast"
-            f"?latitude={place['latitude']}"
-            f"&longitude={place['longitude']}"
-            "&current=temperature_2m,relative_humidity_2m,"
-            "apparent_temperature,wind_speed_10m"
-        )
+    "mustaqillik": (
+        "O‘zbekiston 1991-yil 31-avgustda davlat mustaqilligini e'lon qilgan. "
+        "1-sentabr Mustaqillik kuni sifatida nishonlanadi."
+    ),
 
-        response = requests.get(url, timeout=12)
-        response.raise_for_status()
+    "quyosh": (
+        "Quyosh Yerga eng yaqin yulduzdir. U yorug‘lik va issiqlik "
+        "manbai bo‘lib, Quyosh tizimining markazida joylashgan."
+    ),
 
-        data = response.json()["current"]
+    "yer": (
+        "Yer Quyosh tizimidagi uchinchi sayyora. "
+        "Unda hayot mavjudligi ma'lum bo‘lgan yagona sayyoradir."
+    ),
 
-        return (
-            f"🌍 Shahar: {place['name']}\n"
-            f"🌡 Harorat: {data['temperature_2m']} °C\n"
-            f"🤗 His qilinadigan harorat: "
-            f"{data['apparent_temperature']} °C\n"
-            f"💧 Namlik: {data['relative_humidity_2m']}%\n"
-            f"💨 Shamol: {data['wind_speed_10m']} km/soat"
-        )
+    "python": (
+        "Python — o‘rganish oson bo‘lgan dasturlash tili. "
+        "U sun'iy intellekt, veb-saytlar, avtomatlashtirish va "
+        "ma'lumotlar tahlilida ishlatiladi."
+    ),
 
-    except requests.RequestException:
-        return "Ob-havo xizmatiga ulanib bo'lmadi."
-    except Exception:
-        return "Ob-havo ma'lumotida xatolik."
-
-# ---------- TARJIMON ----------
-
-def translate(text, language):
-    try:
-        url = "https://api.mymemory.translated.net/get"
-        params = {
-            "q": text,
-            "langpair": language
-        }
-
-        response = requests.get(url, params=params, timeout=15)
-        response.raise_for_status()
-
-        data = response.json()
-
-        if data.get("responseStatus") == 200:
-            return data["responseData"]["translatedText"]
-
-        return "Tarjima topilmadi."
-
-    except Exception:
-        return "Tarjima xizmatiga ulanib bo'lmadi."
-
-# ---------- WIKIPEDIA ----------
-
-def wiki(query, language="uz"):
-    try:
-        url = (
-            f"https://{language}.wikipedia.org/w/api.php"
-            "?action=query&generator=search&gsrsearch="
-            f"{quote(query)}&gsrlimit=1&prop=extracts"
-            "&exintro=1&explaintext=1&format=json"
-        )
-
-        response = requests.get(
-            url,
-            headers={"User-Agent": "SherzodAI/1.0"},
-            timeout=15
-        )
-        response.raise_for_status()
-
-        pages = response.json().get("query", {}).get("pages", {})
-
-        if not pages:
-            return None
-
-        page = next(iter(pages.values()))
-        return page.get("extract", "")[:2000] or None
-
-    except Exception:
-        return None
-
-# ---------- VALYUTA ----------
-
-def currency():
-    try:
-        url = "https://open.er-api.com/v6/latest/USD"
-        response = requests.get(url, timeout=12)
-        response.raise_for_status()
-
-        data = response.json()
-
-        if data.get("result") != "success":
-            return "Valyuta xizmati ishlamadi."
-
-        rates = data["rates"]
-
-        return (
-            "💱 Valyuta ma'lumoti:\n"
-            f"1 USD = {rates['UZS']} UZS\n"
-            f"1 USD = {rates['EUR']} EUR\n"
-            f"1 USD = {rates['RUB']} RUB\n"
-            f"1 USD = {rates['GBP']} GBP\n\n"
-            "Kurslar o'zgarib turadi."
-        )
-
-    except Exception:
-        return "Valyuta ma'lumotini olish imkoni bo'lmadi."
-
-# ---------- TASODIFIY PAROL ----------
-
-def make_password():
-    alphabet = string.ascii_letters + string.digits + "!@#$%&*"
-    return "".join(random.SystemRandom().choice(alphabet) for _ in range(16))
-
-# ---------- O'YIN ----------
-
-def start_game():
-    st.session_state.secret_number = random.randint(1, 100)
-    st.session_state.game_active = True
-    return "🎮 1 dan 100 gacha son o'yladim. Uni toping!"
-
-def guess_number(text):
-    try:
-        number = int(text)
-
-        if not st.session_state.get("game_active", False):
-            return "Avval `son top` deb yozing."
-
-        secret = st.session_state.secret_number
-
-        if number == secret:
-            st.session_state.game_active = False
-            return "🎉 To'g'ri! Siz sonni topdingiz!"
-
-        if number < secret:
-            return "Kattaroq son ayting! ⬆️"
-
-        return "Kichikroq son ayting! ⬇️"
-
-    except ValueError:
-        return "Iltimos, butun son kiriting."
-
-# ---------- TEST ----------
-
-def quiz():
-    questions = [
-        ("O'zbekiston poytaxti?", ["Toshkent", "Samarqand", "Buxoro"], 0),
-        ("Yerning tabiiy yo'ldoshi?", ["Mars", "Oy", "Quyosh"], 1),
-        ("5*5 nechchi?", ["20", "25", "30"], 1),
-        ("Suv formulasi?", ["CO2", "H2O", "O2"], 1),
-        ("Python nima?", ["Dasturlash tili", "Hayvon", "Shahar"], 0)
-    ]
-
-    question, options, answer = random.choice(questions)
-
-    return (
-        f"🧠 Savol: {question}\n"
-        f"A) {options[0]}\n"
-        f"B) {options[1]}\n"
-        f"C) {options[2]}\n"
-        f"Javobni A, B yoki C ko'rinishida yozing."
+    "suniy intellekt": (
+        "Sun'iy intellekt kompyuterlarning ma'lumotlarni tahlil qilish, "
+        "naqshlarni aniqlash va ayrim vazifalarni bajarish imkoniyatidir."
     )
+}
 
-# ---------- MATN YORDAMCHISI ----------
 
-def write_text(topic):
-    return (
-        f"📝 {topic} mavzusida matn yozish uchun reja:\n"
-        "1. Kirish va mavzuni tanishtirish.\n"
-        "2. Asosiy fikrlar va misollar.\n"
-        "3. Mavzuning ahamiyati.\n"
-        "4. Xulosa.\n\n"
-        "Mavzu haqida qo'shimcha ma'lumot bersangiz, "
-        "matnni batafsilroq tuzaman."
-    )
+# ==========================================
+# QUIZ
+# ==========================================
 
-# ---------- KUNLIK REJA ----------
+QUIZ = [
+    {
+        "q": "O‘zbekiston mustaqilligi qachon e'lon qilingan?",
+        "a": ["1991-yil", "1995-yil", "1989-yil"],
+        "correct": 0
+    },
+    {
+        "q": "Quyosh tizimidagi eng katta sayyora qaysi?",
+        "a": ["Mars", "Yupiter", "Merkuriy"],
+        "correct": 1
+    },
+    {
+        "q": "Python nima?",
+        "a": ["Dasturlash tili", "Sayyora", "Sport turi"],
+        "correct": 0
+    },
+    {
+        "q": "Amir Temur qaysi yilda tug‘ilgan?",
+        "a": ["1336", "1405", "1500"],
+        "correct": 0
+    }
+]
 
-def daily_plan():
-    return (
-        "📅 KUNLIK REJA\n\n"
-        "08:00 — Uyg'onish va nonushta\n"
-        "09:00 — Dars va bilim olish\n"
-        "11:00 — Tanaffus\n"
-        "12:00 — Muhim vazifalar\n"
-        "14:00 — Tushlik\n"
-        "15:00 — Yangi ko'nikma o'rganish\n"
-        "17:00 — Dam olish\n"
-        "19:00 — Uy vazifalari\n"
-        "21:00 — Ertangi kunga tayyorgarlik"
-    )
 
-# ---------- ASOSIY SHERZOD AI ----------
+# ==========================================
+# MAIN ASSISTANT
+# ==========================================
 
-def sherzod_ai(question):
-    q = question.strip()
-    low = q.lower()
+def answer_user(message):
+    original = message.strip()
+    text = original.lower().strip()
 
-    if not q:
+    if not text:
         return "Savolingizni yozing."
 
-    # Salomlashish
+    # SALOMLASHISH
+
     greetings = [
         "salom", "assalomu alaykum", "assalom",
-        "привет", "здравствуйте", "hello", "hi"
+        "hello", "hi", "привет", "здравствуйте"
     ]
 
-    if low in greetings or low.startswith("salom "):
-        return (
-            "Assalomu alaykum! 😊\n\n"
-            "Men Sherzod AI Assistantman. Siz bilan "
-            "suhbatlashishga tayyorman!\n"
-            "Bugun qanday yangiliklar bor? Nima haqida "
-            "gaplashamiz: texnologiya, bilim, o'yin yoki boshqa mavzumi?"
-        )
+    if text in greetings:
+        return random.choice([
+            "Salom! 👋 Men SHERZOD AI ASSISTANT 1.0 man. Sizga qanday yordam beray?",
+            "Assalomu alaykum! Bugun qanday savolingiz bor?",
+            "Salom! Men tayyorman. Suhbatlashamizmi?"
+        ])
 
-    if any(x in low for x in ["qalaysan", "yaxshimisan", "как дела", "how are you"]):
-        return "Rahmat! Men ishlashga tayyorman. 😊 Sizning ishlaringiz qalay?"
+    if "qalaysan" in text or "qandaysan" in text:
+        return "Rahmat, yaxshi! Sizga qanday yordam bera olaman?"
 
-    if any(x in low for x in ["xayr", "до свидания", "goodbye", "bye"]):
-        return "Xayr! Kuningiz yaxshi o'tsin! 👋"
+    if "rahmat" in text or "спасибо" in text or "thank you" in text:
+        return "Arzimaydi! Yana yordam kerak bo‘lsa, bemalol so‘rang. 😊"
 
-    if any(x in low for x in ["rahmat", "спасибо", "thank you"]):
-        return "Arzimaydi! 😊 Yana yordam kerak bo'lsa yozing."
+    if "isming" in text or "kimsan" in text:
+        return "Men SHERZOD AI ASSISTANT 1.0 man. Muallifim: Fayzullayev Sherzodbek."
 
-    if any(x in low for x in ["kimsan", "isming nima", "who are you", "кто ты"]):
-        return (
-            "Men Sherzod AI Assistant 1.0man. 🤖\n"
-            "Mening yaratuvchim: Fayzullayev Sherzodbek."
-        )
+    if "kim yaratgan" in text or "muallif" in text:
+        return "Meni Fayzullayev Sherzodbek yaratgan."
 
-    if any(x in low for x in ["kim yaratgan", "yaratuvching", "creator"]):
-        return "Meni Fayzullayev Sherzodbek loyihasi sifatida yaratgan."
+    if "nima qila olasan" in text or text == "yordam":
+        return help_text()
 
-    if low in ["yordam", "help", "помощь"]:
-        return (
-            "🤖 SHERZOD AI BUYRUQLARI\n\n"
-            "salom — suhbat\n"
-            "soat — vaqt\n"
-            "sana — sana\n"
-            "ob-havo Toshkent — ob-havo\n"
-            "tarjima: — tarjima yo'nalishlari\n"
-            "uz-en: Salom — inglizchaga tarjima\n"
-            "uz-ru: Salom — ruschaga tarjima\n"
-            "en-uz: Hello — o'zbekchaga tarjima\n"
-            "ru-uz: Привет — o'zbekchaga tarjima\n"
-            "wiki: O'zbekiston — ma'lumot\n"
-            "valyuta — valyuta kurslari\n"
-            "hisobla: 25+25 — hisoblash\n"
-            "fakt — qiziqarli fakt\n"
-            "hazil — hazil\n"
-            "motivatsiya — motivatsiya\n"
-            "topishmoq — topishmoq\n"
-            "son top — o'yin\n"
-            "test — bilim testi\n"
-            "parol — tasodifiy parol\n"
-            "reja — kunlik reja\n"
-            "matn: mavzu — matn rejasi\n"
-            "soz: hello — lug'at\n"
-            "kod — Python haqida"
-        )
+    # TIME
 
-    if "soat" in low or "vaqt" in low or "time" in low:
-        return f"🕒 Toshkent vaqti: {get_time()}"
+    if "soat" in text and (
+        "nechi" in text or "vaqt" in text
+    ):
+        clock, date = get_time()
+        return f"🕒 Toshkent vaqti: {clock}\n📅 Sana: {date}"
 
-    if "sana" in low or "date" in low:
-        return f"📅 Sana: {get_date()}"
+    if "bugun sana" in text or text == "sana":
+        clock, date = get_time()
+        return f"Bugungi sana: {date}"
 
-    if any(x in low for x in ["ob-havo", "ob havo", "weather", "погода"]):
-        city = "Toshkent"
+    # WEATHER
 
-        for name in [
-            "mangit", "mang'it", "samarqand", "buxoro",
-            "andijon", "namangan", "fargona", "qarshi",
-            "nukus", "urganch"
-        ]:
-            if name in low:
-                city = name
-                break
+    if text.startswith("ob havo:") or text.startswith("ob-havo:"):
+        city = original.split(":", 1)[1].strip()
+        return weather(city) if city else "Shahar nomini yozing."
 
+    if text.startswith("ob havo ") or text.startswith("ob-havo "):
+        city = original.split(" ", 2)[2].strip()
         return weather(city)
 
-    if low.startswith("uz-en:"):
-        return translate(q[6:].strip(), "uz|en")
+    # TRANSLATION
 
-    if low.startswith("uz-ru:"):
-        return translate(q[6:].strip(), "uz|ru")
+    translation_commands = [
+        ("uz-en:", "uz", "en"),
+        ("uz-ru:", "uz", "ru"),
+        ("en-uz:", "en", "uz"),
+        ("ru-uz:", "ru", "uz"),
+        ("uz-en ", "uz", "en"),
+        ("uz-ru ", "uz", "ru"),
+        ("en-uz ", "en", "uz"),
+        ("ru-uz ", "ru", "uz")
+    ]
 
-    if low.startswith("en-uz:"):
-        return translate(q[6:].strip(), "en|uz")
+    for prefix, source, target in translation_commands:
+        if text.startswith(prefix):
+            content = original[len(prefix):].strip()
 
-    if low.startswith("ru-uz:"):
-        return translate(q[6:].strip(), "ru|uz")
+            if not content:
+                return "Tarjima qilinadigan matnni yozing."
 
-    if low.startswith("tarjima:"):
-        return (
-            "Tarjima buyruqlari:\n"
-            "uz-en: Salom\n"
-            "uz-ru: Salom\n"
-            "en-uz: Hello\n"
-            "ru-uz: Привет"
-        )
+            return translate_text(content, source, target)
 
-    if low.startswith("wiki:") or low.startswith("qidir:"):
-        search_query = q.split(":", 1)[1].strip()
+    # DICTIONARY
 
-        if not search_query:
-            return "Qidiruv so'zini ham yozing."
+    dictionary_query = text.replace("tarjima:", "").strip()
 
-        result = wiki(search_query, "uz")
+    if dictionary_query in WORDS:
+        return f"📖 {original} — {WORDS[dictionary_query]}"
 
-        if not result:
-            result = wiki(search_query, "ru")
+    # CURRENCY
 
-        return result or "Wikipedia'da ma'lumot topilmadi."
-
-    if low == "valyuta":
+    if "valyuta" in text or "dollar kurs" in text:
         return currency()
 
-    if low.startswith("hisobla:"):
-        return f"🧮 Natija: {calculate(q.split(':', 1)[1].strip())}"
+    # CALCULATOR
 
-    if low.startswith("soz:") or low.startswith("so'z:"):
-        word = q.split(":", 1)[1].strip().lower()
-        return WORDS.get(word, "Bu so'z lug'atimda hozircha yo'q.")
+    if text.startswith("hisobla:") or text.startswith("calc:"):
+        expression = original.split(":", 1)[1].strip()
+        return f"🧮 Natija: {safe_calculate(expression)}"
 
-    if low in WORDS:
-        return WORDS[low]
+    # RANDOM CONTENT
 
-    if low == "fakt" or "qiziqarli fakt" in low:
+    if "qiziqarli fakt" in text or text == "fakt":
         return "💡 " + random.choice(FACTS)
 
-    if low == "hazil" or "hazil ayt" in low:
+    if "hazil" in text or "kulgili" in text:
         return "😂 " + random.choice(JOKES)
 
-    if low == "motivatsiya":
+    if "motivatsiya" in text:
         return "⭐ " + random.choice(MOTIVATION)
 
-    if low == "topishmoq":
+    if "topishmoq" in text:
+        question, solution = random.choice(RIDDLES)
+        return f"🧩 {question}\n\nJavobini topishga harakat qiling!"
+
+    if text == "javobi":
+        return "Topishmoq javobini bilish uchun qaytadan 'topishmoq' deb yozing."
+
+    # KNOWLEDGE
+
+    for key, value in KNOWLEDGE.items():
+        if key in text:
+            return "📚 " + value
+
+    # QUIZ
+
+    if text == "viktorina":
+        question = random.choice(QUIZ)
+
+        st.session_state.last_quiz = question
+
         return (
-            "🧩 Topishmoq:\n"
-            "O'zi yurmaydi, lekin odamlarni olib yuradi. Bu nima?\n"
-            "Javobini topishga harakat qiling!"
+            "🎓 **Viktorina**\n\n"
+            + question["q"] + "\n\n"
+            + "\n".join(
+                f"{i+1}. {a}"
+                for i, a in enumerate(question["a"])
+            )
+            + "\n\nJavobingizni 1, 2 yoki 3 ko‘rinishida yozing."
         )
 
-    if low == "parol":
-        return "🔐 Tasodifiy parol namunasi:\n" + make_password()
+    if hasattr(st.session_state, "last_quiz") and text in ["1", "2", "3"]:
+        question = st.session_state.last_quiz
 
-    if low == "son top":
-        return start_game()
+        if int(text) - 1 == question["correct"]:
+            del st.session_state.last_quiz
+            return "🎉 To‘g‘ri javob! Barakalla!"
 
-    if st.session_state.get("game_active", False) and low.isdigit():
-        return guess_number(low)
+        del st.session_state.last_quiz
+        return "Bu safar xato. Yana bir marta viktorina o‘ynab ko‘ring!"
 
-    if low == "test":
-        return quiz()
+    # GAME
 
-    if low.startswith("matn:"):
-        topic = q.split(":", 1)[1].strip()
-        return write_text(topic) if topic else "Matn mavzusini yozing."
+    if text == "son top":
+        number = random.randint(1, 10)
+        st.session_state.game_number = number
 
-    if low == "reja":
-        return daily_plan()
+        return "🎮 Men 1 dan 10 gacha son o‘yladim. Topishga harakat qiling!"
 
-    if low == "kod":
+    if hasattr(st.session_state, "game_number"):
+        if text.isdigit():
+            guess = int(text)
+
+            if guess == st.session_state.game_number:
+                del st.session_state.game_number
+                return "🏆 Barakalla! To‘g‘ri topdingiz!"
+
+            if guess < st.session_state.game_number:
+                return "Kattaroq son ayting!"
+
+            return "Kichikroq son ayting!"
+
+    # PASSWORD GENERATOR
+
+    if "parol yarat" in text:
+        alphabet = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#"
+        password = "".join(
+            random.choice(alphabet) for _ in range(16)
+        )
+        return f"🔐 Yangi parol: `{password}`"
+
+    # PYTHON
+
+    if "python" in text and (
+        "nima" in text or "o‘rgan" in text or "organ" in text
+    ):
         return (
-            "💻 Python — o'rganish uchun qulay dasturlash tili.\n"
-            "Misol:\n"
-            "print('Salom, Sherzod AI!')\n\n"
-            "Bu kod ekranga salom chiqaradi."
+            "🐍 Python — dasturlash tili.\n\n"
+            "U orqali sayt, dastur, o‘yin va sun'iy intellekt "
+            "loyihalarini yaratish mumkin.\n\n"
+            "Oddiy misol:\n\n"
+            "```python\nprint('Salom dunyo!')\n```"
         )
 
-    if "python" in low:
-        return (
-            "Python — dasturlash tili. U sun'iy intellekt, "
-            "saytlar, avtomatlashtirish va ma'lumotlar "
-            "bilan ishlashda qo'llanadi."
-        )
+    # WIKIPEDIA LANGUAGE COMMANDS
 
-    if "internet" in low:
-        return (
-            "Internet — dunyo bo'ylab qurilmalarni "
-            "bog'laydigan global tarmoq."
-        )
+    for prefix, lang in [
+        ("wiki-uz:", "uz"),
+        ("wiki-ru:", "ru"),
+        ("wiki-en:", "en"),
+        ("wiki:", "uz")
+    ]:
+        if text.startswith(prefix):
+            query = original[len(prefix):].strip()
 
-    if "sevgi" in low:
-        return "Sevgi — hurmat, ishonch va mehrga asoslangan tuyg'u."
+            if not query:
+                return "Qidiruv uchun mavzuni yozing."
 
-    if "zerik" in low:
-        return "Keling, fakt, hazil yoki topishmoq bilan kayfiyatni ko'taramiz!"
+            result = wikipedia_search(query, lang)
 
-    # Oddiy hisoblash
-    allowed = set("0123456789+-*/().% ")
-    if any(ch.isdigit() for ch in q) and all(ch in allowed for ch in q):
-        return f"🧮 Natija: {calculate(q)}"
+            return result or "Bu mavzu bo‘yicha ma'lumot topilmadi."
 
-    # Wikipedia orqali umumiy qidiruv
-    result = wiki(q, "uz")
+    # GENERAL WIKIPEDIA SEARCH
 
-    if result:
-        return "📚 Topilgan ma'lumot:\n\n" + result
+    if len(text.split()) >= 2:
+        result = wikipedia_search(original, "uz")
+
+        if result:
+            return result
+
+    # CONTEXT FOLLOW-UP
+
+    if len(st.session_state.messages) >= 2:
+        previous = st.session_state.messages[-1]["content"]
+
+        if text in ["nega?", "nima uchun?", "batafsil", "davom et", "yana"]:
+            return (
+                "Albatta! Oldingi mavzuimizni davom ettiramiz.\n\n"
+                f"Oldingi javobimiz: {previous[:700]}\n\n"
+                "Qaysi qismini batafsil tushuntirishimni yozing."
+            )
 
     return (
-        "Savolingizni tushunishga harakat qilyapman. 🤖\n\n"
-        "Iltimos, savolni biroz boshqacharoq yozing "
-        "yoki `yordam` buyrug'ini yuboring."
+        "Savolingizni tushunishga harakat qildim, lekin aniq javob "
+        "topa olmadim. Boshqacharoq qilib yozing yoki quyidagilardan "
+        "foydalaning:\n\n"
+        "- `wiki-uz: Amir Temur`\n"
+        "- `wiki-ru: история Узбекистана`\n"
+        "- `wiki-en: Solar System`\n"
+        "- `uz-en: Salom`\n"
+        "- `ob havo Toshkent`\n"
+        "- `hisobla: 25*4`"
     )
 
+
 # ==========================================
-# CHAT INTERFEYSI
+# HELP
 # ==========================================
 
-st.title("🤖 SHERZOD AI")
-st.subheader("Assistant 1.0")
-st.caption("Yaratuvchi: Fayzullayev Sherzodbek")
+def help_text():
+    return """
+# 👑 SHERZOD AI — YORDAM
+
+### 💬 Suhbat
+Oddiy savollar yozing va suhbatlashing.
+
+### 🌍 Tarjima
+- `uz-en: Salom`
+- `uz-ru: Salom`
+- `en-uz: Hello`
+- `ru-uz: Привет`
+
+### 📚 Wikipedia
+- `wiki-uz: Amir Temur`
+- `wiki-ru: история`
+- `wiki-en: science`
+
+### 🌤 Ob-havo
+- `ob havo Toshkent`
+- `ob havo Mangit`
+
+### 🧮 Kalkulyator
+- `hisobla: 25*4`
+- `hisobla: 100/5`
+
+### 💰 Valyuta
+- `valyuta`
+
+### 🎮 O‘yinlar
+- `son top`
+- `viktorina`
+- `topishmoq`
+
+### 🎲 Boshqa
+- `fakt`
+- `hazil`
+- `motivatsiya`
+- `parol yarat`
+- `sana`
+- `soat nechi`
+"""
+
+
+# ==========================================
+# HEADER
+# ==========================================
 
 st.markdown(
-    "Salom! Men Sherzod AI. Savollaringizga yordam berishga tayyorman."
+    "<h1 style='text-align:center;'>👑 SHERZOD AI</h1>",
+    unsafe_allow_html=True
 )
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+st.markdown(
+    "<p style='text-align:center;color:#aaa;'>"
+    "SMART ASSISTANT • VERSION 1.0"
+    "</p>",
+    unsafe_allow_html=True
+)
 
-if "game_active" not in st.session_state:
-    st.session_state.game_active = False
+st.divider()
+
+# ==========================================
+# SIDEBAR
+# ==========================================
 
 with st.sidebar:
-    st.title("⚙️ Boshqaruv")
-
-    st.write("Sherzod AI Assistant 1.0")
+    st.markdown("## 👑 SHERZOD AI")
+    st.caption("Fayzullayev Sherzodbek")
 
     st.divider()
 
-    if st.button("🗑 Suhbatni tozalash"):
+    clock, date = get_time()
+
+    st.write("🕒", clock)
+    st.write("📅", date)
+
+    st.divider()
+
+    st.markdown("### 📌 Buyruqlar")
+
+    if st.button("💡 Yordam", use_container_width=True):
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": help_text()
+        })
+
+    if st.button("🎲 Qiziqarli fakt", use_container_width=True):
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": random.choice(FACTS)
+        })
+
+    if st.button("😂 Hazil", use_container_width=True):
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": random.choice(JOKES)
+        })
+
+    if st.button("⭐ Motivatsiya", use_container_width=True):
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": random.choice(MOTIVATION)
+        })
+
+    if st.button("🧩 Topishmoq", use_container_width=True):
+        question, solution = random.choice(RIDDLES)
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": question
+        })
+
+    st.divider()
+
+    if st.button("🗑 Suhbatni tozalash", use_container_width=True):
         st.session_state.messages = []
-        st.session_state.game_active = False
         st.rerun()
 
-    st.subheader("📌 Buyruqlar")
-    st.code(
-        "yordam\n"
-        "salom\n"
-        "soat\n"
-        "sana\n"
-        "ob-havo Toshkent\n"
-        "valyuta\n"
-        "uz-en: Salom\n"
-        "uz-ru: Salom\n"
-        "en-uz: Hello\n"
-        "ru-uz: Привет\n"
-        "wiki: O'zbekiston\n"
-        "hisobla: 25+15*2\n"
-        "fakt\n"
-        "hazil\n"
-        "motivatsiya\n"
-        "topishmoq\n"
-        "son top\n"
-        "test\n"
-        "parol\n"
-        "reja\n"
-        "matn: Texnologiya\n"
-        "soz: hello\n"
-        "kod"
-    )
+    st.caption("SHERZOD AI ASSISTANT 1.0")
 
-    st.divider()
-    st.caption("© Sherzod AI Assistant")
+
+# ==========================================
+# CHAT DISPLAY
+# ==========================================
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-prompt = st.chat_input("Sherzod AI ga savol yozing...")
 
-if prompt:
+# ==========================================
+# CHAT INPUT
+# ==========================================
+
+user_input = st.chat_input(
+    "SHERZOD AI ga savolingizni yozing..."
+)
+
+if user_input:
     st.session_state.messages.append({
         "role": "user",
-        "content": prompt
+        "content": user_input
     })
 
     with st.chat_message("user"):
-        st.markdown(prompt)
+        st.markdown(user_input)
 
     with st.chat_message("assistant"):
-        try:
-            with st.spinner("Sherzod AI o'ylayapti..."):
-                response = sherzod_ai(prompt)
-        except Exception:
-            response = (
-                "Kutilmagan xatolik yuz berdi. "
-                "Iltimos, qayta urinib ko'ring."
-            )
+        with st.spinner("SHERZOD AI o‘ylayapti..."):
+            response = answer_user(user_input)
 
         st.markdown(response)
 
@@ -693,3 +917,18 @@ if prompt:
         "role": "assistant",
         "content": response
     })
+
+
+# ==========================================
+# FOOTER
+# ==========================================
+
+st.divider()
+
+st.markdown(
+    "<p style='text-align:center;color:#888;'>"
+    "© SHERZOD AI ASSISTANT 1.0 | "
+    "Created by Fayzullayev Sherzodbek"
+    "</p>",
+    unsafe_allow_html=True
+)
