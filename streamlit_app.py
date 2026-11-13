@@ -2032,7 +2032,22 @@ if not st.session_state.messages:
     )
 
 # Oldingi suhbatlarni ko‘rsatish
-render_chat()
+
+# ---------------- CHAT HISTORY FUNCTION ----------------
+
+def render_chat():
+
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+    for message in st.session_state.messages:
+
+        role = message.get("role", "assistant")
+        content = message.get("content", "")
+
+        with st.chat_message(role):
+            st.markdown(content)
+
 
 # ---------------- USER INPUT ----------------
 
