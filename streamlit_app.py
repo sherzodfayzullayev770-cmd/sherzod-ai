@@ -754,4 +754,4 @@ def sherzod_ai(message, history):
             if key in low:
                 return random.choice(replies)
 
-        return "Kechirasiz, bu savolga hozircha javob topolmadim. Boshqacha so‘rab ko‘ring."
+    return "Kechirasiz, bu savolga hozircha javob topolmadim. Boshqacha so‘rab ko‘ring."
