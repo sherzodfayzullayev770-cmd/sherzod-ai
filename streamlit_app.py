@@ -750,4 +750,8 @@ def sherzod_ai(message, history):
         return "My name is Sherzod AI Assistant 1.0. 🤖"
 
     # Avtojavoblar
-    for key, replies in AUT
+        for key, replies in AUTO_REPLIES.items():
+            if key in low:
+                return random.choice(replies)
+
+        return "Kechirasiz, bu savolga hozircha javob topolmadim. Boshqacha so‘rab ko‘ring."
