@@ -1941,16 +1941,18 @@ def answer_user(user_text):
 
 # ---------------- CHAT HISTORY ----------------
 
-def render_chat():
+# ---------------- ADD MESSAGE FUNCTION ----------------
 
-    for message in st.session_state.messages:
+def add_message(role, content):
 
-        role = message.get("role", "assistant")
-        content = message.get("content", "")
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
 
-        with st.chat_message(role):
-
-            st.markdown(content)
+    st.session_state.messages.append({
+        "role": role,
+        "content": str(content)
+    })
+    
 
 
 # ---------------- SIDEBAR ----------------
