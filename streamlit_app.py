@@ -750,7 +750,7 @@ def sherzod_ai(message, history):
         return "My name is Sherzod AI Assistant 1.0. 🤖"
 
     # Avtojavoblar
-        for key, replies in AUTO_REPLIES.items():
+    for key, replies in AUTO_REPLIES.items():
             if key in low:
                 return random.choice(replies)
 
