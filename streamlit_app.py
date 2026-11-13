@@ -1,4 +1,3 @@
-
 import streamlit as st
 import requests
 import random
@@ -19,10 +18,6 @@ st.set_page_config(
     page_icon="👑",
     layout="wide"
 )
-
-# =====================================================
-# DESIGN
-# =====================================================
 
 st.markdown("""
 <style>
@@ -68,10 +63,6 @@ hr {
 
 HEADERS = {"User-Agent": "SherzodAI/1.0"}
 
-# =====================================================
-# SESSION
-# =====================================================
-
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -84,9 +75,6 @@ if "last_quiz" not in st.session_state:
 if "game_number" not in st.session_state:
     st.session_state.game_number = None
 
-# =====================================================
-# TIME
-# =====================================================
 
 def get_time():
     try:
@@ -125,7 +113,7 @@ U 1821-yilda Muqaddas Yelena orolida vafot etgan.
 Muhammad Shayboniyxon 1451-yilda tug‘ilgan.
 U Shayboniylar sulolasining asoschisi hisoblanadi.
 1500-yildan boshlab Movarounnahrda hokimiyatni egallashga kirishgan.
-Uning davrida Buxoro va Samarqand siyosiy jihatdan muhim markazlar bo‘lgan.
+Uning davrida Buxoro va Samarqand muhim markazlar bo‘lgan.
 1510-yilda Marv yaqinidagi jangda halok bo‘lgan.
 """,
 
@@ -137,19 +125,33 @@ Uning mashhur asari Boburnoma hisoblanadi.
 1530-yilda vafot etgan.
 """,
 
+    "alisher navoiy": """
+Alisher Navoiy 1441-yil 9-fevralda Hirotda tug‘ilgan.
+U buyuk shoir, mutafakkir va davlat arbobi bo‘lgan.
+Uning mashhur asarlaridan biri Xamsadir.
+""",
+
+    "jaloliddin manguberdi": """
+Jaloliddin Manguberdi Xorazmshohlar davlatining so‘nggi hukmdori bo‘lgan.
+U mo‘g‘ullar bosqiniga qarshi kurashgan.
+1231-yilda vafot etgan.
+""",
+
+    "al-xorazmiy": """
+Muhammad al-Xorazmiy IX asrda yashagan buyuk matematik va olim.
+U algebra fanining rivojlanishiga katta hissa qo‘shgan.
+Algoritm atamasi uning nomi bilan bog‘liq.
+""",
+
     "ikkinchi jahon urushi": """
 Ikkinchi jahon urushi 1939-yil 1-sentabrda boshlangan.
 Urush 1945-yil sentabrda yakunlangan.
-U dunyoning ko‘plab davlatlarini qamrab olgan.
 1945-yil may oyida Germaniya taslim bo‘lgan.
 1945-yil sentabrda Yaponiya taslim bo‘lgan.
-Urush insoniyat tarixidagi eng yirik urushlardan biri hisoblanadi.
 """,
 
     "birinchi jahon urushi": """
 Birinchi jahon urushi 1914–1918-yillarda bo‘lib o‘tgan.
-Urushning boshlanishiga bir qancha siyosiy va harbiy ziddiyatlar sabab bo‘lgan.
-Urushda ko‘plab davlatlar ishtirok etgan.
 1918-yil 11-noyabrda sulh bitimi imzolangan.
 """,
 
@@ -162,109 +164,53 @@ O‘zbekiston 1991-yil 31-avgustda davlat mustaqilligini e'lon qilgan.
     "qadimgi misr": """
 Qadimgi Misr Nil daryosi bo‘yida rivojlangan sivilizatsiya edi.
 U piramidalari, fir'avnlari va ieroglif yozuvi bilan mashhur.
-Misr tarixida ko‘plab sulolalar hukmronlik qilgan.
 """,
 
     "rim imperiyasi": """
 Rim imperiyasi qadimgi dunyoning eng yirik davlatlaridan biri bo‘lgan.
-Rim huquqi, me'morchiligi va yo‘l qurilishi tarixda katta iz qoldirgan.
 G‘arbiy Rim imperiyasi 476-yilda qulagan.
-""",
-
-    "alisher navoiy": """
-Alisher Navoiy 1441-yil 9-fevralda Hirotda tug‘ilgan.
-U buyuk shoir, mutafakkir va davlat arbobi bo‘lgan.
-Uning mashhur asarlaridan biri Xamsadir.
-Navoiy turkiy adabiyot rivojiga ulkan hissa qo‘shgan.
-""",
-
-    "jaloliddin manguberdi": """
-Jaloliddin Manguberdi Xorazmshohlar davlatining so‘nggi hukmdori bo‘lgan.
-U mo‘g‘ullar bosqiniga qarshi kurashgan.
-Uning jasorati O‘zbekiston tarixida muhim o‘rin tutadi.
-1231-yilda vafot etgan.
-""",
-
-    "al-xorazmiy": """
-Muhammad al-Xorazmiy IX asrda yashagan buyuk matematik va olim.
-U algebra fanining rivojlanishiga katta hissa qo‘shgan.
-Algoritm atamasi uning nomi bilan bog‘liq.
 """,
 
     "quyosh tizimi": """
 Quyosh tizimi markazida Quyosh joylashgan.
 Uning atrofida sakkizta sayyora aylanadi:
 Merkuriy, Venera, Yer, Mars, Yupiter, Saturn, Uran va Neptun.
-Bundan tashqari, mitti sayyoralar, asteroidlar va kometalar ham mavjud.
-""",
-
-    "yer sayyorasi": """
-Yer Quyoshdan uchinchi sayyoradir.
-Uning yuzasining katta qismini suv qoplagan.
-Yer atmosferasi tirik organizmlar uchun muhim.
-Yer Quyosh atrofida taxminan 365,25 kunda bir marta aylanadi.
-""",
-
-    "quyosh": """
-Quyosh Quyosh tizimining markazidagi yulduzdir.
-U yorug‘lik va issiqlik beradi.
-Quyosh energiyasi Yerda hayot mavjud bo‘lishi uchun juda muhim.
-""",
-
-    "oy": """
-Oy Yerning tabiiy yo‘ldoshidir.
-U o‘zidan yorug‘lik chiqarmaydi, Quyosh nurini qaytaradi.
-Oy fazalari uning Yer atrofidagi harakati bilan bog‘liq.
 """,
 
     "python": """
 Python — sodda va keng imkoniyatli dasturlash tili.
-U veb-dasturlash, ma'lumotlar tahlili, avtomatlashtirish
-va sun'iy intellekt loyihalarida ishlatiladi.
-Python dasturining oddiy namunasi:
+U veb-dasturlash, ma'lumotlar tahlili va sun'iy intellektda ishlatiladi.
 print("Salom dunyo!")
 """,
 
     "suniy intellekt": """
 Sun'iy intellekt kompyuter tizimlarining ma'lumotlarni
-tahlil qilish, naqshlarni aniqlash va vazifalarni bajarish
-imkoniyatlarini o‘rganuvchi texnologiyalar sohasidir.
-Mashinali o‘rganish uning muhim yo‘nalishlaridan biridir.
+tahlil qilish va vazifalarni bajarish imkoniyatlarini o‘rganuvchi soha.
 """,
 
     "internet": """
 Internet — butun dunyodagi kompyuter tarmoqlarini
 birlashtiruvchi global tizim.
-U orqali ma'lumot almashish, muloqot qilish,
-ta'lim olish va xizmatlardan foydalanish mumkin.
 """,
 
     "fotosintez": """
-Fotosintez — yashil o‘simliklar yorug‘lik energiyasidan
-foydalanib, suv va karbonat angidriddan organik moddalar
-hosil qiladigan jarayon.
-Bu jarayonda kislorod ham ajralib chiqadi.
+Fotosintez — yashil o‘simliklarning yorug‘lik yordamida
+suv va karbonat angidriddan organik moddalar hosil qilish jarayoni.
 """,
 
     "gravitatsiya": """
 Gravitatsiya — jismlarning bir-birini tortish hodisasi.
-Yer gravitatsiyasi jismlarni Yer yuzasiga tortadi.
-Nyuton va Eynshteyn gravitatsiyani tushunishga katta hissa qo‘shgan.
 """,
 
     "futbol": """
 Futbol ikki jamoa o‘rtasida o‘ynaladigan sport turi.
 Har bir jamoada maydonda 11 nafar futbolchi bo‘ladi.
-Asosiy maqsad raqib darvozasiga gol urishdir.
 """,
 
     "geografiya": """
 Geografiya Yer yuzasi, tabiat, aholi va hududlarni o‘rganadi.
-U tabiiy geografiya va iqtisodiy-ijtimoiy geografiya kabi
-yo‘nalishlarga bo‘linadi.
 """
 }
-
 # =====================================================
 # LANGUAGE DETECTION
 # =====================================================
@@ -287,7 +233,7 @@ def detect_language(text):
 
 
 # =====================================================
-# SMART WIKIPEDIA SEARCH
+# QUESTION CLEANER
 # =====================================================
 
 def clean_question(question):
@@ -309,6 +255,10 @@ def clean_question(question):
 
     return text.strip()
 
+
+# =====================================================
+# WIKIPEDIA SEARCH
+# =====================================================
 
 def wikipedia_search(query, language=None):
     if not language:
@@ -343,6 +293,7 @@ def wikipedia_search(query, language=None):
                 headers=HEADERS,
                 timeout=12
             )
+
             response.raise_for_status()
 
             results = response.json().get(
@@ -352,7 +303,6 @@ def wikipedia_search(query, language=None):
             if not results:
                 continue
 
-            # Eng mos natijani tanlash
             best = None
             best_score = 0
 
@@ -381,11 +331,7 @@ def wikipedia_search(query, language=None):
                     best_score = score
                     best = item
 
-            if not best:
-                continue
-
-            # Juda aloqasiz natijani qabul qilmaymiz
-            if best_score < 1.2:
+            if not best or best_score < 1.2:
                 continue
 
             title = best["title"]
@@ -449,9 +395,7 @@ def translate_text(text, source, target):
         pass
 
     return "Tarjima amalga oshmadi. Internetni tekshiring."
-
-
-# =====================================================
+    # =====================================================
 # WEATHER
 # =====================================================
 
@@ -633,8 +577,6 @@ WORDS = {
     "история": "Tarix",
     "наука": "Fan"
 }
-
-
 # =====================================================
 # RANDOM CONTENT
 # =====================================================
@@ -644,7 +586,7 @@ FACTS = [
     "Yupiter Quyosh tizimidagi eng katta sayyora.",
     "Ahtapotning uchta yuragi bor.",
     "Tinch okeani Yer yuzidagi eng katta okean.",
-    "Asalarilar raqs orqali bir-biriga ma'lumot uzatadi.",
+    "Asalarilar raqs orqali ma'lumot uzatadi.",
     "Saturn halqalari asosan muz va changdan iborat.",
     "Yer Quyosh atrofida taxminan 365,25 kunda aylanadi.",
     "Antarktida Yer yuzidagi eng sovuq materik."
@@ -723,7 +665,6 @@ Istalgan savolingizni yozing.
 
 ### 🧮 Kalkulyator
 - `hisobla: 25*4`
-- `hisobla: 100/5`
 
 ### 💰 Valyuta
 - `valyuta`
@@ -754,4 +695,216 @@ def answer_user(message):
     if not text:
         return "Savolingizni yozing."
 
-    # Oldingi mavzu bilan da
+    if text in ["salom", "assalomu alaykum", "hello", "привет"]:
+        return random.choice([
+            "Salom! Men SHERZOD AI. Sizga qanday yordam beray?",
+            "Assalomu alaykum! Bugun nimalarni o‘rganamiz?",
+            "Salom! Savolingizni kutaman."
+        ])
+
+    if text in ["yordam", "help", "komandalar"]:
+        return help_text()
+
+    if text.startswith("wiki-uz:"):
+        result = wikipedia_search(original.split(":", 1)[1], "uz")
+        return result or "O‘zbekcha Wikipedia ma'lumoti topilmadi."
+
+    if text.startswith("wiki-ru:"):
+        result = wikipedia_search(original.split(":", 1)[1], "ru")
+        return result or "Ruscha Wikipedia ma'lumoti topilmadi."
+
+    if text.startswith("wiki-en:"):
+        result = wikipedia_search(original.split(":", 1)[1], "en")
+        return result or "Inglizcha Wikipedia ma'lumoti topilmadi."
+
+    if text.startswith("wiki:"):
+        result = wikipedia_search(original.split(":", 1)[1])
+        return result or "Ma'lumot topilmadi."
+
+    translations = {
+        "uz-en:": ("uz", "en"),
+        "uz-ru:": ("uz", "ru"),
+        "en-uz:": ("en", "uz"),
+        "ru-uz:": ("ru", "uz")
+    }
+
+    for prefix, langs in translations.items():
+        if text.startswith(prefix):
+            sentence = original.split(":", 1)[1].strip()
+            if not sentence:
+                return "Tarjima qilinadigan matnni yozing."
+            return translate_text(sentence, langs[0], langs[1])
+
+    if text.startswith("ob havo "):
+        return weather(original[8:].strip())
+
+    if text == "valyuta":
+        return currency()
+
+    if text.startswith("hisobla:"):
+        expression = original.split(":", 1)[1].strip()
+        return f"Natija: **{safe_calculate(expression)}**"
+
+    if text == "fakt":
+        return random.choice(FACTS)
+
+    if text == "hazil":
+        return random.choice(JOKES)
+
+    if text == "motivatsiya":
+        return random.choice(MOTIVATION)
+
+    if text == "topishmoq":
+        riddle, answer = random.choice(RIDDLES)
+        st.session_state.last_riddle = answer
+        return riddle + "\n\nJavobini bilsangiz yozing: javobi"
+
+    if text == "javobi":
+        answer = st.session_state.get("last_riddle")
+        return answer or "Avval topishmoq so‘rang."
+
+    if text == "son top":
+        number = random.randint(1, 20)
+        st.session_state.game_number = number
+        return "Men 1 dan 20 gacha son o‘yladim. Topib ko‘ring!"
+
+    if st.session_state.game_number is not None and text.isdigit():
+        guess = int(text)
+        target = st.session_state.game_number
+
+        if guess == target:
+            st.session_state.game_number = None
+            return "🎉 To‘g‘ri! Siz topdingiz!"
+        if guess < target:
+            return "Kattaroq son ayting."
+        return "Kichikroq son ayting."
+
+    if text == "viktorina":
+        quiz = random.choice(QUIZ)
+        st.session_state.last_quiz = quiz
+        options = "\n".join(
+            f"{i + 1}. {option}"
+            for i, option in enumerate(quiz["a"])
+        )
+        return (
+            f"🧠 **{quiz['q']}**\n\n"
+            f"{options}\n\n"
+            "Javobni 1, 2 yoki 3 shaklida yozing."
+        )
+
+    quiz = st.session_state.last_quiz
+
+    if quiz and text in ["1", "2", "3"]:
+        choice = int(text) - 1
+        st.session_state.last_quiz = None
+
+        if choice == quiz["correct"]:
+            return "🎉 To‘g‘ri javob! Barakalla!"
+
+        return (
+            "Bu safar noto‘g‘ri.\n"
+            f"To‘g‘ri javob: {quiz['a'][quiz['correct']]}"
+        )
+
+    if text == "parol yarat":
+        password = "".join(
+            random.choices(
+                "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#",
+                k=12
+            )
+        )
+        return f"🔐 Tasodifiy parol: `{password}`"
+
+    if text == "sana":
+        return get_time()[1]
+
+    if text == "soat nechi":
+        return get_time()[0]
+
+    for key, value in WORDS.items():
+        if text == key:
+            return f"📖 {key} — {value}"
+
+    for key, value in KNOWLEDGE.items():
+        if key in text:
+            return value
+
+    if any(word in text for word in ["rahmat", "спасибо", "thanks"]):
+        return "Arzimaydi! Yana savolingiz bo‘lsa, yozing."
+
+    if any(word in text for word in ["xayr", "пока", "goodbye"]):
+        return "Xayr! Yana ko‘rishguncha!"
+
+    if any(word in text for word in ["qalaysan", "qandaysan", "how are you"]):
+        return "Yaxshi, rahmat! Sizga qanday yordam bera olaman?"
+
+    if any(word in text for word in ["isming nima", "who are you"]):
+        return "Men SHERZOD AI ASSISTANT 1.0 dasturiman."
+
+    result = wikipedia_search(original)
+
+    if result:
+        st.session_state.last_topic = original
+        return result
+
+    return (
+        "Bu savolga hozircha aniq javob topa olmadim. "
+        "Savolni boshqacha yozib ko‘ring yoki `yordam` deb yozing."
+    )
+
+
+# =====================================================
+# MAIN INTERFACE
+# =====================================================
+
+st.title("👑 SHERZOD AI ASSISTANT")
+st.caption("Creator: Fayzullayev Sherzodbek")
+st.markdown("---")
+
+with st.sidebar:
+    st.title("👑 SHERZOD AI")
+    st.write("Sun'iy intellekt yordamchisi")
+    st.markdown("---")
+
+    if st.button("🗑 Suhbatni tozalash"):
+        st.session_state.messages = []
+        st.session_state.last_quiz = None
+        st.session_state.game_number = None
+        st.rerun()
+
+    st.markdown("### Imkoniyatlar")
+    st.write("📚 Wikipedia qidiruvi")
+    st.write("🌍 Tarjima")
+    st.write("🌤 Ob-havo")
+    st.write("💰 Valyuta")
+    st.write("🧮 Kalkulyator")
+    st.write("🎮 O‘yinlar")
+    st.write("🧠 Bilimlar bazasi")
+
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+user_input = st.chat_input("SHERZOD AI ga savol yozing...")
+
+if user_input:
+    st.session_state.messages.append({
+        "role": "user",
+        "content": user_input
+    })
+
+    with st.chat_message("user"):
+        st.markdown(user_input)
+
+    with st.chat_message("assistant"):
+        with st.spinner("SHERZOD AI o‘ylayapti..."):
+            response = answer_user(user_input)
+        st.markdown(response)
+
+    st.session_state.messages.append({
+        "role": "assistant",
+        "content": response
+    })
+
+st.markdown("---")
+st.caption("SHERZOD AI ASSISTANT 1.0 | Fayzullayev Sherzodbek")
